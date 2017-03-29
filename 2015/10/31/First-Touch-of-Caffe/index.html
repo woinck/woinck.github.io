@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>MAC上配置Caffe &amp; 运行样例 | 石雨</title>
+  <meta name="author" content="Yiming Hu">
+  
+  <meta name="description" content="自从进实验室之后还没有怎么做过一些实质性的工作，前一阵子一直在读关于神经网络和CNN的教程和paper，终于差不多都搞明白了，又用matlab的DeepLearn Toobox跑了一个车牌识别的CNN，没太调整网络参数的情况下单字符的正确率就可以达到93%+了，感觉还不错。于是打算开始进行下一步的工">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="MAC上配置Caffe &amp; 运行样例"/>
+  <meta property="og:site_name" content="石雨"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="石雨" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">石雨</a></h1>
+  <h2><a href="/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="[post]">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-10-31T11:41:14.000Z"><a href="/2015/10/31/First-Touch-of-Caffe/">2015-10-31</a></time>
+      
+      
+  
+    <h1 class="title">MAC上配置Caffe &amp; 运行样例</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>自从进实验室之后还没有怎么做过一些实质性的工作，前一阵子一直在读关于神经网络和CNN的教程和paper，终于差不多都搞明白了，又用matlab的<a href="https://github.com/rasmusbergpalm/DeepLearnToolbox" target="_blank" rel="external">DeepLearn Toobox</a>跑了一个车牌识别的CNN，没太调整网络参数的情况下单字符的正确率就可以达到93%+了，感觉还不错。于是打算开始进行下一步的工作了，主要有两个：继续读有关rcnn和fast-rcnn的paper，以及配Caffe。</p>
+<h2 id="MAC-OSX下Caffe的配置"><a href="#MAC-OSX下Caffe的配置" class="headerlink" title="MAC OSX下Caffe的配置"></a>MAC OSX下Caffe的配置</h2><p>其实作为和linux同源的操作系统，osx下配置起来应该是比较容易的。不过我的Air虽然在三年前就有了，由于这么几个原因我基本没有配过osx下的任何开发环境：</p>
+<ul>
+<li>大学的前两年在做队式程序设计大赛，只能在win下做</li>
+<li>并没有意识到osx的一些好</li>
+<li>喜欢“睡眠”远胜过“关机”</li>
+<li>2014年换了电脑，把mac放回了家里</li>
+</ul>
+<p>以上原因导致了我虽然拥有一台air但在osx下进行开发的时间基本为0。。。所以这次配置基本可以认为是从零开始。。</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
+<li><p><strong>安装XCode</strong>，安装完之后确认一下是否有XCode Command Line Tools，没有的话补装一下：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">xcode-select --install</div></pre></td></tr></table></figure>
+</li>
+<li><p><strong>安装<a href="http://brew.sh" target="_blank" rel="external">homebrew</a>：</strong>此神器居然现在才装我也是醉了，装上之后安装一些其他包会方便很多。</p>
+</li>
+<li><strong><a href="https://developer.nvidia.com/cuda-downloads" target="_blank" rel="external">CUDA</a>*：</strong>用于NVIDEA显卡加速，推荐安装，我的air没有N卡所以没装(而且我居然把CUDA下载下来之后才想起来这个问题)。</li>
+<li><strong>安装<a href="https://www.continuum.io/downloads" target="_blank" rel="external">Anaconda</a></strong>，其中包含了Caffe所需的hdl5。</li>
+<li><p>安装各种依赖：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">brew install -vd snappy leveldb gflags glog szip lmdb</div><div class="line">brew tap homebrew/science</div><div class="line">brew install opencv</div></pre></td></tr></table></figure>
+<p>  如果装过opencv的话就不用再装了，实在是花时间。</p>
+</li>
+<li><p>如果装了Anaconda的话，需要运行</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">brew edit opencv</div></pre></td></tr></table></figure>
+<p>  然后找到和下面两行差不多的两行，并改成下面两行的这个样子：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">-DPYTHON_LIBRARY=#&#123;py_prefix&#125;/lib/libpython2.7.dylib</div><div class="line">-DPYTHON_INCLUDE_DIR=#&#123;py_prefix&#125;/include/python2.7</div></pre></td></tr></table></figure>
+</li>
+<li><p>继续安装各种依赖：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">brew install protobuf boost</div></pre></td></tr></table></figure>
+</li>
+<li><p>根据喜好选择BLAS(basic linear algebra subprograms)，我这里直接用了osx自带的atlas，如果为了追求更高性能的话可以选择intel的MKL。</p>
+</li>
+</ul>
+<h3 id="安装Caffe"><a href="#安装Caffe" class="headerlink" title="安装Caffe"></a>安装Caffe</h3><ul>
+<li>从Caffe的官网下载源码</li>
+<li><p>修改<strong>Makefile.config</strong>(从Makefile.config.sample 复制过来即可)，例如我没有用GPU，blas采用atlas，其他没有改动，则主要修改两行：</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">CPU_ONLY := 1</div><div class="line">BLAS := atlas</div></pre></td></tr></table></figure>
+</li>
+<li><p>最后Make大功告成</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">make all</div><div class="line">make test</div><div class="line">make runtest</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="Caffe-样例测试"><a href="#Caffe-样例测试" class="headerlink" title="Caffe 样例测试"></a>Caffe 样例测试</h2><ul>
+<li>这一部分Caffe官网的<a href="http://caffe.berkeleyvision.org/gathered/examples/mnist.html" target="_blank" rel="external">Toturial</a>写得非常好，而且每一步的原因也都说得很清楚，基本上照着做就没有问题，我这里唯一注意的一点就是由于没有用GPU，所以在<em>lenet_solver.prototxt</em>中需要有一行改动：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">solver_mode: CPU</div></pre></td></tr></table></figure>
+<p>最后用样例的lenet网络跑mnist，大概花了13分钟，还可以接受~</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/学习/">学习</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/DeepLearning/">DeepLearning</a>, <a href="/tags/OSX/">OSX</a>, <a href="/tags/Caffe/">Caffe</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<section id="comment">
+  <h1 class="title">Kommentare</h1>
+
+  
+      <div id="fb-root"></div>
+<script>
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=123456789012345";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<div class="fb-comments" data-href="http://yoursite.com/2015/10/31/First-Touch-of-Caffe/index.html" data-num-posts="5" data-width="840" data-colorscheme="light"></div>
+      
+  
+</section>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Suche">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Kategorien</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/学习/">学习</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Caffe/">Caffe</a><small>1</small></li>
+  
+    <li><a href="/tags/DeepLearning/">DeepLearning</a><small>1</small></li>
+  
+    <li><a href="/tags/OSX/">OSX</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2017 Yiming Hu
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
